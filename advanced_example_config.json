@@ -1,0 +1,103 @@
+{
+  "organization": {
+    "name": "Advanced Tech Solutions",
+    "project_name": "Enterprise Project Tracker"
+  },
+  "teams": [
+    {
+      "name": "AI Research",
+      "description": "Artificial intelligence and machine learning research",
+      "sample_tasks": [
+        {
+          "task_id": "AI001",
+          "task_name": "Neural Network Architecture Design",
+          "assigned_to": "Dr. Sarah Chen",
+          "priority": "High",
+          "status": "In Progress",
+          "start_date": "2024-01-15",
+          "due_date": "2024-02-15",
+          "progress": 45,
+          "hours_est": 80,
+          "hours_actual": 36,
+          "dependencies": "",
+          "subtasks": "Research, Design, Prototype, Test",
+          "notes": "Exploring transformer architectures"
+        },
+        {
+          "task_id": "AI002",
+          "task_name": "Dataset Preparation",
+          "assigned_to": "Mike Rodriguez",
+          "priority": "Medium",
+          "status": "Completed",
+          "start_date": "2024-01-01",
+          "due_date": "2024-01-14",
+          "progress": 100,
+          "hours_est": 40,
+          "hours_actual": 38,
+          "dependencies": "",
+          "subtasks": "Collection, Cleaning, Validation",
+          "notes": "Dataset ready for training"
+        }
+      ]
+    },
+    {
+      "name": "Cloud Infrastructure",
+      "description": "Cloud platform and infrastructure management",
+      "sample_tasks": [
+        {
+          "task_id": "CLOUD001",
+          "task_name": "Kubernetes Cluster Setup",
+          "assigned_to": "DevOps Team",
+          "priority": "Critical",
+          "status": "Planning",
+          "start_date": "2024-01-20",
+          "due_date": "2024-02-05",
+          "progress": 10,
+          "hours_est": 60,
+          "hours_actual": 6,
+          "dependencies": "CLOUD002",
+          "subtasks": "Planning, Setup, Configuration, Testing",
+          "notes": "Multi-region deployment required"
+        }
+      ]
+    },
+    {
+      "name": "Product Design",
+      "description": "User experience and product design",
+      "sample_tasks": [
+        {
+          "task_id": "UX001",
+          "task_name": "User Journey Mapping",
+          "assigned_to": "Emma Wilson",
+          "priority": "High",
+          "status": "In Progress",
+          "start_date": "2024-01-10",
+          "due_date": "2024-01-25",
+          "progress": 70,
+          "hours_est": 30,
+          "hours_actual": 21,
+          "dependencies": "",
+          "subtasks": "Research, Mapping, Validation",
+          "notes": "Focus on enterprise users"
+        }
+      ]
+    }
+  ],
+  "task_headers": [
+    "Task ID",
+    "Task Name", 
+    "Assigned To",
+    "Priority",
+    "Status",
+    "Start Date",
+    "Due Date",
+    "Progress %",
+    "Hours Est.",
+    "Hours Actual",
+    "Dependencies",
+    "Subtasks",
+    "Notes"
+  ],
+  "status_options": ["Not Started", "Planning", "In Progress", "Testing", "Completed", "On Hold", "Cancelled"],
+  "priority_options": ["Low", "Medium", "High", "Critical", "Urgent"]
+}
