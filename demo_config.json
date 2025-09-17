@@ -1,0 +1,51 @@
+{
+  "organization": {
+    "name": "Demo Company",
+    "project_name": "Project Tracker"
+  },
+  "teams": [
+    {
+      "name": "Research",
+      "description": "Research and development team",
+      "sample_tasks": []
+    },
+    {
+      "name": "Marketing",
+      "description": "Marketing and outreach team",
+      "sample_tasks": []
+    },
+    {
+      "name": "Sales",
+      "description": "Sales tasks and management",
+      "sample_tasks": []
+    }
+  ],
+  "task_headers": [
+    "Task ID",
+    "Task Name",
+    "Assigned To",
+    "Priority",
+    "Status",
+    "Start Date",
+    "Due Date",
+    "Progress %",
+    "Hours Est.",
+    "Hours Actual",
+    "Dependencies",
+    "Subtasks",
+    "Notes"
+  ],
+  "status_options": [
+    "Not Started",
+    "Planning",
+    "In Progress",
+    "Completed",
+    "On Hold"
+  ],
+  "priority_options": [
+    "Low",
+    "Medium",
+    "High",
+    "Critical"
+  ]
+}

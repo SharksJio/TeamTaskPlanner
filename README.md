@@ -2,6 +2,40 @@
 
 A comprehensive Excel-based team task management system designed for multiple technical teams working on different projects with varying deadlines and resource requirements.
 
+## 🌟 NEW: Dynamic Configuration System
+
+**Major Update**: The Team Task Planner now supports dynamic configuration! Create and manage teams without regenerating Python templates.
+
+### ✨ Key Dynamic Features:
+- **JSON-based Configuration**: Define teams, organization, and task structures in config files
+- **Auto-Detection**: Extract configuration from existing Excel workbooks
+- **Dynamic Team Addition**: Add new teams to existing workbooks without coding
+- **Template Matching**: Automatically adapts to your existing structure
+- **Backward Compatible**: Works with existing templates
+
+## 🚀 Quick Start (Dynamic)
+
+### Option 1: Auto-Configure from Existing File
+```bash
+# Extract configuration from existing workbook
+python3 utilities.py auto_config Team_Task_Planner.xlsx
+
+# Add new teams dynamically
+python3 utilities.py add_team Team_Task_Planner.xlsx "New Team Name"
+```
+
+### Option 2: Custom Configuration
+```bash
+# Create with custom configuration
+python3 create_team_task_planner.py my_config.json
+```
+
+### Option 3: Interactive Setup
+```bash
+# Guided setup with custom teams
+python3 setup.py
+```
+
 ## 🌟 Overview
 
 This tool provides a complete solution for:
@@ -10,14 +44,20 @@ This tool provides a complete solution for:
 - Monitoring resource allocation and team member availability
 - Weekly task planning and sprint coordination
 - Automatic master plan updates when individual tasks change
+- **Dynamic team and project management without code changes**
 
 ## 📦 What's Included
 
 - **Team_Task_Planner.xlsx** - Ready-to-use Excel workbook
-- **create_team_task_planner.py** - Python script to generate/regenerate the Excel template
+- **create_team_task_planner.py** - Python script to generate/regenerate Excel templates
+- **config_manager.py** - Dynamic configuration management system
+- **utilities.py** - Enhanced utilities for dynamic team management
+- **setup.py** - Interactive setup wizard with custom configuration
+- **config.json** - Default configuration file
+- **DYNAMIC_CONFIG_GUIDE.md** - Comprehensive guide for dynamic features
 - **DOCUMENTATION.md** - Comprehensive usage guide
 
-## 🚀 Quick Start
+## 🚀 Traditional Quick Start
 
 1. **Download the Excel file**: `Team_Task_Planner.xlsx`
 2. **Open in Microsoft Excel**
@@ -83,8 +123,21 @@ This tool provides a complete solution for:
 
 See [DOCUMENTATION.md](DOCUMENTATION.md) for detailed usage instructions, best practices, and customization options.
 
-## 🔄 Regenerating the Template
+## 🔄 Working with Templates
 
+### Dynamic Approach (Recommended)
+```bash
+# Create configuration from existing workbook
+python3 utilities.py auto_config workbook.xlsx config.json
+
+# Add teams dynamically without regeneration
+python3 utilities.py add_team workbook.xlsx "New Team"
+
+# Create new workbook with custom configuration
+python3 create_team_task_planner.py config.json
+```
+
+### Traditional Regeneration
 To create a fresh template or modify the structure:
 
 ```bash
@@ -93,6 +146,11 @@ python3 create_team_task_planner.py
 
 This will generate a new `Team_Task_Planner.xlsx` with sample data and the latest structure.
 
+## 📚 Documentation
+
+- **[DYNAMIC_CONFIG_GUIDE.md](DYNAMIC_CONFIG_GUIDE.md)** - Complete guide for dynamic configuration features
+- **[DOCUMENTATION.md](DOCUMENTATION.md)** - Detailed usage instructions and best practices
+
 ---
 
-*Transform your team management with this comprehensive, Excel-based solution that grows with your organization's needs.*
+*Transform your team management with this comprehensive, Excel-based solution that grows with your organization's needs - now with dynamic configuration support!*

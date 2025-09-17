@@ -1,0 +1,56 @@
+{
+  "organization": {
+    "name": "TEAM TASK PLANNER",
+    "project_name": "Team Task Planner"
+  },
+  "teams": [
+    {
+      "name": "Frontend Team",
+      "description": "Frontend Team tasks and management",
+      "sample_tasks": []
+    },
+    {
+      "name": "Backend Team",
+      "description": "Backend Team tasks and management",
+      "sample_tasks": []
+    },
+    {
+      "name": "DevOps Team",
+      "description": "DevOps Team tasks and management",
+      "sample_tasks": []
+    },
+    {
+      "name": "QA Team",
+      "description": "QA Team tasks and management",
+      "sample_tasks": []
+    }
+  ],
+  "task_headers": [
+    "Task ID",
+    "Task Name",
+    "Assigned To",
+    "Priority",
+    "Status",
+    "Start Date",
+    "Due Date",
+    "Progress %",
+    "Hours Est.",
+    "Hours Actual",
+    "Dependencies",
+    "Subtasks",
+    "Notes"
+  ],
+  "status_options": [
+    "Not Started",
+    "Planning",
+    "In Progress",
+    "Completed",
+    "On Hold"
+  ],
+  "priority_options": [
+    "Low",
+    "Medium",
+    "High",
+    "Critical"
+  ]
+}
