@@ -9,6 +9,7 @@ import sys
 import os
 from create_team_task_planner import main as create_planner
 from config_manager import ConfigManager
+import openpyxl
 
 def interactive_setup():
     """Interactive setup wizard for customizing the Team Task Planner."""
@@ -63,7 +64,8 @@ def interactive_setup():
     # Confirm setup
     print(f"\n✅ Setup Summary:")
     print(f"Organization: {org_name}")
-    print(f"Teams: {', '.join(teams)}")
+    #print(f"Teams: {', '.join(teams)}")
+    print(f"Teams: {', '.join(team['name'] for team in teams)}")
     print(f"Filename: {filename}")
     
     confirm = input("\nProceed with setup? (y/N): ").strip().lower()
@@ -76,6 +78,7 @@ def interactive_setup():
     try:
         # Create basic planner first
         wb = create_planner()
+        wb = openpyxl.load_workbook(wb)
         
         # Remove default sheets and add custom teams
         for sheet_name in list(wb.sheetnames):
@@ -86,10 +89,10 @@ def interactive_setup():
         # Rename the template and add custom teams
         if teams and "Frontend Team" in wb.sheetnames:
             frontend_sheet = wb["Frontend Team"]
-            if teams[0] != "Frontend Team":
-                frontend_sheet.title = teams[0]
+            if teams[0]['name'] != "Frontend Team":
+                frontend_sheet.title = teams[0]['name']
                 # Update title in the sheet
-                frontend_sheet['A1'] = f"{teams[0].upper()} - TASK MANAGEMENT"
+                frontend_sheet['A1'] = f"{teams[0]['name'].upper()} - TASK MANAGEMENT"
         
         # Add remaining teams
         from create_team_task_planner import create_team_sheet
@@ -104,8 +107,8 @@ def interactive_setup():
         center_align = Alignment(horizontal='center', vertical='center')
         
         for team in teams[1:]:
-            team_sheet = wb.create_sheet(team)
-            create_team_sheet(team_sheet, team, header_font, header_fill, subheader_font, 
+            team_sheet = wb.create_sheet(team['name'])
+            create_team_sheet(team_sheet, team['name'], header_font, header_fill, subheader_font, 
                              subheader_fill, border, center_align)
         
         # Update organization name in Master Dashboard
@@ -132,7 +135,10 @@ def interactive_setup():
             f.write(f"Created: {os.getcwd()}\n\n")
             f.write("YOUR TEAMS:\n")
             for i, team in enumerate(teams, 1):
-                f.write(f"{i}. {team}\n")
+                if isinstance(team, dict):
+                    f.write(f"{i}. {team['name']}\n")
+                else:
+                    f.write(f"{i}. {team}\n")
             f.write(f"\nGETTING STARTED:\n")
             f.write(f"1. Open {filename} in Excel\n")
             f.write(f"2. Review Master Dashboard\n")
