@@ -1,0 +1,109 @@
+{
+  "organization": {
+    "name": "Your Organization",
+    "project_name": "Team Task Planner"
+  },
+  "teams": [
+    {
+      "name": "Frontend Team",
+      "description": "User interface and frontend development",
+      "sample_tasks": [
+        {
+          "task_id": "FE001",
+          "task_name": "User Login Page",
+          "assigned_to": "John Doe",
+          "priority": "High",
+          "status": "In Progress",
+          "start_date": "2024-01-01",
+          "due_date": "2024-01-15",
+          "progress": 70,
+          "hours_est": 20,
+          "hours_actual": 18,
+          "dependencies": "",
+          "subtasks": "Design, Code, Test",
+          "notes": "Need API integration"
+        }
+      ]
+    },
+    {
+      "name": "Backend Team",
+      "description": "Server-side development and APIs",
+      "sample_tasks": [
+        {
+          "task_id": "BE001",
+          "task_name": "User Authentication API",
+          "assigned_to": "Jane Smith",
+          "priority": "High",
+          "status": "Completed",
+          "start_date": "2024-01-01",
+          "due_date": "2024-01-10",
+          "progress": 100,
+          "hours_est": 15,
+          "hours_actual": 16,
+          "dependencies": "",
+          "subtasks": "Design, Code, Test",
+          "notes": "Deployed to staging"
+        }
+      ]
+    },
+    {
+      "name": "DevOps Team",
+      "description": "Infrastructure and deployment",
+      "sample_tasks": [
+        {
+          "task_id": "DO001",
+          "task_name": "CI/CD Pipeline Setup",
+          "assigned_to": "Mike Brown",
+          "priority": "High",
+          "status": "Completed",
+          "start_date": "2024-01-01",
+          "due_date": "2024-01-12",
+          "progress": 100,
+          "hours_est": 25,
+          "hours_actual": 22,
+          "dependencies": "",
+          "subtasks": "Jenkins, Docker, AWS",
+          "notes": "Pipeline is working"
+        }
+      ]
+    },
+    {
+      "name": "QA Team",
+      "description": "Quality assurance and testing",
+      "sample_tasks": [
+        {
+          "task_id": "QA001",
+          "task_name": "Login Testing",
+          "assigned_to": "Sarah Davis",
+          "priority": "High",
+          "status": "In Progress",
+          "start_date": "2024-01-05",
+          "due_date": "2024-01-18",
+          "progress": 75,
+          "hours_est": 12,
+          "hours_actual": 10,
+          "dependencies": "FE001",
+          "subtasks": "Manual, Auto",
+          "notes": "Found 2 bugs"
+        }
+      ]
+    }
+  ],
+  "task_headers": [
+    "Task ID",
+    "Task Name",
+    "Assigned To",
+    "Priority",
+    "Status",
+    "Start Date",
+    "Due Date",
+    "Progress %",
+    "Hours Est.",
+    "Hours Actual",
+    "Dependencies",
+    "Subtasks",
+    "Notes"
+  ],
+  "status_options": ["Not Started", "Planning", "In Progress", "Completed", "On Hold"],
+  "priority_options": ["Low", "Medium", "High", "Critical"]
+}

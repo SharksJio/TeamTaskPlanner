@@ -2,16 +2,42 @@
 """
 Team Task Planner Utilities
 Additional utilities for customizing and working with the Team Task Planner Excel file.
+Enhanced with dynamic configuration support.
 """
 
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from datetime import datetime, timedelta
 import sys
+import os
+from config_manager import ConfigManager, detect_existing_configuration
 
-def add_new_team_sheet(workbook_path, team_name):
-    """Add a new team sheet to an existing workbook."""
+def add_new_team_sheet(workbook_path, team_name, config_path="config.json"):
+    """Add a new team sheet to an existing workbook using dynamic configuration.
+    
+    Args:
+        workbook_path: Path to existing Excel workbook
+        team_name: Name of the new team to add
+        config_path: Path to configuration file
+    
+    Returns:
+        True if team was added successfully, False otherwise
+    """
     try:
+        # Load configuration manager
+        config_manager = ConfigManager(config_path)
+        
+        # Check if configuration exists from existing workbook
+        if not os.path.exists(config_path):
+            print("No configuration file found. Attempting to detect from existing workbook...")
+            detected_config = detect_existing_configuration(workbook_path)
+            if detected_config:
+                config_manager.config = detected_config
+                config_manager.save_config()
+                print(f"Created configuration file: {config_path}")
+            else:
+                print("Could not detect configuration. Using defaults.")
+        
         wb = openpyxl.load_workbook(workbook_path)
         
         # Check if team already exists
@@ -19,35 +45,81 @@ def add_new_team_sheet(workbook_path, team_name):
             print(f"Team '{team_name}' already exists!")
             return False
         
+        # Add team to configuration
+        if not config_manager.add_team(team_name, f"{team_name} tasks and management"):
+            print(f"Team '{team_name}' already exists in configuration!")
+        
+        # Find an existing team sheet to use as template
+        team_names = config_manager.get_team_names()
+        template_team = None
+        for existing_team in team_names:
+            if existing_team in wb.sheetnames and existing_team != team_name:
+                template_team = existing_team
+                break
+        
+        if not template_team:
+            print("No existing team sheet found to use as template!")
+            return False
+        
         # Create new sheet based on existing team template
-        template_sheet = wb["Frontend Team"]  # Use as template
+        template_sheet = wb[template_team]
         new_sheet = wb.copy_worksheet(template_sheet)
         new_sheet.title = team_name
         
         # Update the title in the new sheet
         new_sheet['A1'] = f"{team_name.upper()} - TASK MANAGEMENT"
         
-        # Clear sample data (keep headers)
-        for row in range(7, 10):  # Clear rows 7-9 (sample tasks)
+        # Clear sample data (keep headers) - find the right range based on headers
+        # Headers are in row 6, so clear from row 7 onwards
+        last_row = template_sheet.max_row
+        for row in range(7, last_row + 1):
             for col in range(1, 14):  # Clear columns A-M
-                new_sheet.cell(row=row, column=col).value = ""
+                cell = new_sheet.cell(row=row, column=col)
+                if cell.value and not str(cell.value).startswith("="):  # Keep formulas
+                    cell.value = ""
+        
+        # Add a sample task for the new team
+        sample_task = [
+            f"{team_name[:3].upper()}001",
+            f"Sample Task for {team_name}",
+            "Team Member",
+            "Medium",
+            "Not Started",
+            datetime.now().strftime("%Y-%m-%d"),
+            (datetime.now() + timedelta(days=14)).strftime("%Y-%m-%d"),
+            0, 10, 0, "", "", "Add your tasks here"
+        ]
+        
+        for col_idx, value in enumerate(sample_task, 1):
+            new_sheet.cell(row=7, column=col_idx).value = value
         
         wb.save(workbook_path)
         print(f"Successfully added team '{team_name}' to {workbook_path}")
+        
+        # Update master dashboard
+        update_master_dashboard(workbook_path, config_manager.get_team_names(), config_path)
+        
         return True
         
     except Exception as e:
         print(f"Error adding team: {e}")
         return False
 
-def update_master_dashboard(workbook_path, teams_list):
-    """Update master dashboard with new team information."""
+def update_master_dashboard(workbook_path, teams_list, config_path="config.json"):
+    """Update master dashboard with new team information.
+    
+    Args:
+        workbook_path: Path to Excel workbook
+        teams_list: List of team names
+        config_path: Path to configuration file
+    """
     try:
         wb = openpyxl.load_workbook(workbook_path)
         master_sheet = wb["Master Dashboard"]
         
-        # Clear existing team data (rows 7-10)
-        for row in range(7, 11):
+        # Clear existing team data (start from row 7 and clear based on team count)
+        max_clear_row = 7 + len(teams_list) + 5  # Add buffer
+        for row in range(7, max_clear_row):
             for col in range(1, 9):
                 master_sheet.cell(row=row, column=col).value = ""
         
@@ -63,6 +135,25 @@ def update_master_dashboard(workbook_path, teams_list):
             master_sheet.cell(row=idx, column=7).value = 0  # Team Size
             master_sheet.cell(row=idx, column=8).value = 0  # Workload %
         
+        # Update key metrics formulas
+        team_count = len(teams_list)
+        end_row = 6 + team_count
+        
+        # Find the metrics section and update formulas
+        for row in range(15, 25):  # Metrics usually start around row 15
+            cell_a = master_sheet.cell(row=row, column=1)
+            if cell_a.value:
+                if "Total Projects:" in str(cell_a.value):
+                    master_sheet.cell(row=row, column=2).value = f"=COUNTA(A7:A{end_row})"
+                elif "Total Tasks:" in str(cell_a.value):
+                    master_sheet.cell(row=row, column=2).value = f"=SUM(B7:B{end_row})"
+                elif "Overall Progress:" in str(cell_a.value):
+                    master_sheet.cell(row=row, column=2).value = f"=IF(SUM(B7:B{end_row})>0,SUM(C7:C{end_row})/SUM(B7:B{end_row}),0)"
+                elif "Critical Issues:" in str(cell_a.value):
+                    master_sheet.cell(row=row, column=2).value = f"=SUM(F7:F{end_row})"
+                elif "Average Team Load:" in str(cell_a.value):
+                    master_sheet.cell(row=row, column=2).value = f"=IF(COUNT(H7:H{end_row})>0,AVERAGE(H7:H{end_row}),0)"
+        
         wb.save(workbook_path)
         print(f"Successfully updated master dashboard in {workbook_path}")
         return True
@@ -71,8 +162,39 @@ def update_master_dashboard(workbook_path, teams_list):
         print(f"Error updating master dashboard: {e}")
         return False
 
+def auto_configure_from_workbook(workbook_path, config_path="config.json"):
+    """Automatically create configuration from existing workbook.
+    
+    Args:
+        workbook_path: Path to existing Excel workbook
+        config_path: Path where to save the configuration
+    
+    Returns:
+        True if configuration was created successfully, False otherwise
+    """
+    try:
+        detected_config = detect_existing_configuration(workbook_path)
+        if detected_config:
+            # Save the configuration
+            config_manager = ConfigManager(config_path)
+            config_manager.config = detected_config
+            config_manager.save_config()
+            
+            print(f"✅ Successfully created configuration from {workbook_path}")
+            print(f"📄 Configuration saved to: {config_path}")
+            print(f"🏢 Organization: {detected_config['organization']['name']}")
+            print(f"👥 Teams found: {', '.join([team['name'] for team in detected_config['teams']])}")
+            
+            return True
+        else:
+            print(f"❌ Could not detect configuration from {workbook_path}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error auto-configuring from workbook: {e}")
+        return False
+
 def export_team_tasks_to_csv(workbook_path, team_name, output_file):
-    """Export a team's tasks to CSV format."""
     try:
         wb = openpyxl.load_workbook(workbook_path)
         
@@ -210,18 +332,29 @@ def main():
     if len(sys.argv) < 2:
         print("Team Task Planner Utilities")
         print("Usage:")
-        print("  python3 utilities.py add_team <workbook_path> <team_name>")
+        print("  python3 utilities.py add_team <workbook_path> <team_name> [config_path]")
+        print("  python3 utilities.py auto_config <workbook_path> [config_path]")
         print("  python3 utilities.py export_csv <workbook_path> <team_name> <output_file>")
         print("  python3 utilities.py weekly_report <workbook_path> <output_file>")
         print("  python3 utilities.py validate <workbook_path>")
+        print("")
+        print("New Dynamic Features:")
+        print("  auto_config - Create configuration from existing workbook")
+        print("  add_team - Add team using dynamic configuration")
         return
     
     command = sys.argv[1]
     
-    if command == "add_team" and len(sys.argv) == 4:
+    if command == "add_team" and len(sys.argv) >= 4:
         workbook_path = sys.argv[2]
         team_name = sys.argv[3]
-        add_new_team_sheet(workbook_path, team_name)
+        config_path = sys.argv[4] if len(sys.argv) > 4 else "config.json"
+        add_new_team_sheet(workbook_path, team_name, config_path)
+        
+    elif command == "auto_config" and len(sys.argv) >= 3:
+        workbook_path = sys.argv[2]
+        config_path = sys.argv[3] if len(sys.argv) > 3 else "config.json"
+        auto_configure_from_workbook(workbook_path, config_path)
         
     elif command == "export_csv" and len(sys.argv) == 5:
         workbook_path = sys.argv[2]

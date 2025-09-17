@@ -2,11 +2,13 @@
 """
 Quick Setup Script for Team Task Planner
 Helps users customize the Team Task Planner for their specific organization.
+Enhanced with dynamic configuration support.
 """
 
 import sys
 import os
 from create_team_task_planner import main as create_planner
+from config_manager import ConfigManager
 
 def interactive_setup():
     """Interactive setup wizard for customizing the Team Task Planner."""
@@ -29,14 +31,23 @@ def interactive_setup():
         team_name = input(f"Team {team_num}: ").strip()
         if not team_name:
             break
-        teams.append(team_name)
+        teams.append({
+            "name": team_name,
+            "description": f"{team_name} tasks and management",
+            "sample_tasks": []
+        })
         team_num += 1
     
     if not teams:
         print("No teams specified. Using default teams:")
-        teams = ["Frontend Team", "Backend Team", "DevOps Team", "QA Team"]
+        teams = [
+            {"name": "Frontend Team", "description": "User interface and frontend development", "sample_tasks": []},
+            {"name": "Backend Team", "description": "Server-side development and APIs", "sample_tasks": []},
+            {"name": "DevOps Team", "description": "Infrastructure and deployment", "sample_tasks": []},
+            {"name": "QA Team", "description": "Quality assurance and testing", "sample_tasks": []}
+        ]
         for team in teams:
-            print(f"  - {team}")
+            print(f"  - {team['name']}")
     
     # Get filename
     filename = input(f"\n💾 Excel filename (default: {org_name.replace(' ', '_')}_Task_Planner.xlsx): ").strip()
@@ -45,6 +56,9 @@ def interactive_setup():
     
     if not filename.endswith('.xlsx'):
         filename += '.xlsx'
+    
+    # Configuration filename
+    config_filename = filename.replace('.xlsx', '_config.json')
     
     # Confirm setup
     print(f"\n✅ Setup Summary:")

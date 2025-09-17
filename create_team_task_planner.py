@@ -3,6 +3,8 @@
 Team Task Planner Excel Generator
 Creates a comprehensive Excel workbook for managing multiple technical teams,
 projects, deadlines, and task allocations.
+
+Now supports dynamic configuration through config.json for flexible team setup.
 """
 
 import openpyxl
@@ -12,9 +14,17 @@ from openpyxl.formatting.rule import ColorScaleRule, CellIsRule
 from openpyxl.worksheet.datavalidation import DataValidation
 from datetime import datetime, timedelta
 import pandas as pd
+from config_manager import ConfigManager
 
-def create_team_task_planner():
-    """Create the main Excel workbook with all required sheets."""
+def create_team_task_planner(config_manager: ConfigManager = None):
+    """Create the main Excel workbook with all required sheets.
+    
+    Args:
+        config_manager: Configuration manager instance. If None, creates a new one.
+    """
+    
+    if config_manager is None:
+        config_manager = ConfigManager()
     
     # Create workbook
     wb = openpyxl.Workbook()
@@ -33,40 +43,41 @@ def create_team_task_planner():
     
     # 1. Create Master Dashboard
     master_sheet = wb.create_sheet("Master Dashboard")
-    create_master_dashboard(master_sheet, header_font, header_fill, border, center_align)
+    create_master_dashboard(master_sheet, header_font, header_fill, border, center_align, config_manager)
     
     # 2. Create Team Allocation Sheet
     allocation_sheet = wb.create_sheet("Team Allocation")
-    create_team_allocation(allocation_sheet, header_font, header_fill, border, center_align)
+    create_team_allocation(allocation_sheet, header_font, header_fill, border, center_align, config_manager)
     
-    # 3. Create sample team sheets
-    teams = ["Frontend Team", "Backend Team", "DevOps Team", "QA Team"]
+    # 3. Create team sheets based on configuration
+    teams = config_manager.get_teams()
     for team in teams:
-        team_sheet = wb.create_sheet(team)
+        team_sheet = wb.create_sheet(team["name"])
         create_team_sheet(team_sheet, team, header_font, header_fill, subheader_font, 
-                         subheader_fill, border, center_align)
+                         subheader_fill, border, center_align, config_manager)
     
     # 4. Create Weekly Planning Sheet
     weekly_sheet = wb.create_sheet("Weekly Planning")
-    create_weekly_planning(weekly_sheet, header_font, header_fill, border, center_align)
+    create_weekly_planning(weekly_sheet, header_font, header_fill, border, center_align, config_manager)
     
     # 5. Create Templates Sheet
     templates_sheet = wb.create_sheet("Templates")
-    create_templates_sheet(templates_sheet, header_font, header_fill, border, center_align)
+    create_templates_sheet(templates_sheet, header_font, header_fill, border, center_align, config_manager)
     
     # Set Master Dashboard as active sheet
     wb.active = master_sheet
     
     return wb
 
-def create_master_dashboard(ws, header_font, header_fill, border, center_align):
+def create_master_dashboard(ws, header_font, header_fill, border, center_align, config_manager):
     """Create the master dashboard for overall project tracking."""
     
     ws.title = "Master Dashboard"
     
-    # Title
+    # Title with organization name
+    org_name = config_manager.get_organization_name()
     ws.merge_cells('A1:H2')
-    ws['A1'] = "TEAM TASK PLANNER - MASTER DASHBOARD"
+    ws['A1'] = f"{org_name.upper()} - TEAM TASK PLANNER - MASTER DASHBOARD"
     ws['A1'].font = Font(size=16, bold=True)
     ws['A1'].alignment = center_align
     ws['A1'].fill = PatternFill(start_color="1F4E79", end_color="1F4E79", fill_type="solid")
@@ -89,13 +100,22 @@ def create_master_dashboard(ws, header_font, header_fill, border, center_align):
         cell.alignment = center_align
         cell.border = border
     
-    # Sample data for teams
-    teams_data = [
-        ["Frontend Team", 15, 8, 4, 3, 1, 5, 85],
-        ["Backend Team", 20, 12, 5, 3, 2, 6, 90],
-        ["DevOps Team", 10, 6, 2, 2, 1, 3, 75],
-        ["QA Team", 12, 7, 3, 2, 1, 4, 80]
-    ]
+    # Dynamic team data based on configuration
+    teams = config_manager.get_teams()
+    teams_data = []
+    
+    for team in teams:
+        # Create placeholder data for each team - this will be updated by formulas
+        teams_data.append([
+            team["name"],
+            0,  # Total Tasks - will be calculated via formula
+            0,  # Completed - will be calculated via formula
+            0,  # In Progress - will be calculated via formula
+            0,  # Pending - will be calculated via formula
+            0,  # Overdue - will be calculated via formula
+            0,  # Team Size - placeholder
+            0   # Workload % - placeholder
+        ])
     
     for row_idx, team_data in enumerate(teams_data, 7):
         for col_idx, value in enumerate(team_data, 1):
@@ -105,7 +125,7 @@ def create_master_dashboard(ws, header_font, header_fill, border, center_align):
             cell.alignment = center_align
             
             # Color code workload percentage
-            if col_idx == 8:  # Workload % column
+            if col_idx == 8 and isinstance(value, (int, float)) and value > 0:  # Workload % column
                 if value >= 90:
                     cell.fill = PatternFill(start_color="FF6B6B", end_color="FF6B6B", fill_type="solid")
                 elif value >= 80:
@@ -113,16 +133,19 @@ def create_master_dashboard(ws, header_font, header_fill, border, center_align):
                 else:
                     cell.fill = PatternFill(start_color="6BCF7F", end_color="6BCF7F", fill_type="solid")
     
-    # Key Metrics
+    # Key Metrics with dynamic team count
     ws['A13'] = "KEY METRICS"
     ws['A13'].font = Font(size=14, bold=True)
     
+    team_count = len(teams)
+    end_row = 6 + team_count
+    
     metrics = [
-        ["Total Projects:", "=COUNTA(A7:A10)"],
-        ["Total Tasks:", "=SUM(B7:B10)"],
-        ["Overall Progress:", "=SUM(C7:C10)/SUM(B7:B10)"],
-        ["Critical Issues:", "=SUM(F7:F10)"],
-        ["Average Team Load:", "=AVERAGE(H7:H10)"]
+        ["Total Projects:", f"=COUNTA(A7:A{end_row})"],
+        ["Total Tasks:", f"=SUM(B7:B{end_row})"],
+        ["Overall Progress:", f"=IF(SUM(B7:B{end_row})>0,SUM(C7:C{end_row})/SUM(B7:B{end_row}),0)"],
+        ["Critical Issues:", f"=SUM(F7:F{end_row})"],
+        ["Average Team Load:", f"=IF(COUNT(H7:H{end_row})>0,AVERAGE(H7:H{end_row}),0)"]
     ]
     
     for row_idx, (metric, formula) in enumerate(metrics, 15):
@@ -146,7 +169,7 @@ def create_master_dashboard(ws, header_font, header_fill, border, center_align):
         adjusted_width = min(max_length + 2, 20)
         ws.column_dimensions[column_letter].width = adjusted_width
 
-def create_team_allocation(ws, header_font, header_fill, border, center_align):
+def create_team_allocation(ws, header_font, header_fill, border, center_align, config_manager):
     """Create team allocation sheet for resource management."""
     
     ws.title = "Team Allocation"
@@ -171,15 +194,23 @@ def create_team_allocation(ws, header_font, header_fill, border, center_align):
         cell.alignment = center_align
         cell.border = border
     
-    # Sample employee data
+    # Sample employee data - use first team as default for sample data
+    teams = config_manager.get_teams()
+    default_team = teams[0]["name"] if teams else "Default Team"
+    
     employees = [
-        ["John Doe", "Frontend Team", "Senior Developer", 3, 40, 90, "React, Angular, Vue", "2024-01-15", "Busy"],
-        ["Jane Smith", "Frontend Team", "UI Designer", 2, 35, 75, "Figma, Sketch, CSS", "2024-01-10", "Available"],
-        ["Bob Johnson", "Backend Team", "Tech Lead", 4, 45, 95, "Python, Java, AWS", "2024-01-20", "Overloaded"],
-        ["Alice Wilson", "Backend Team", "Developer", 2, 40, 70, "Node.js, MongoDB", "2024-01-08", "Available"],
-        ["Mike Brown", "DevOps Team", "Engineer", 3, 40, 85, "Docker, Kubernetes", "2024-01-12", "Busy"],
-        ["Sarah Davis", "QA Team", "Tester", 2, 35, 65, "Selenium, Manual Testing", "2024-01-05", "Available"]
+        ["John Doe", default_team, "Senior Developer", 3, 40, 90, "Programming, Analysis", "2024-01-15", "Busy"],
+        ["Jane Smith", default_team, "Developer", 2, 35, 75, "Design, Development", "2024-01-10", "Available"],
     ]
+    
+    # Add sample employees for additional teams if they exist
+    team_names = config_manager.get_team_names()
+    if len(team_names) > 1:
+        for i, team_name in enumerate(team_names[1:], 1):
+            employees.extend([
+                [f"Team Member {i*2-1}", team_name, "Developer", 2, 40, 70, "Various Skills", "2024-01-08", "Available"],
+                [f"Team Member {i*2}", team_name, "Senior Developer", 3, 40, 85, "Leadership, Technical", "2024-01-12", "Busy"]
+            ])
     
     for row_idx, emp_data in enumerate(employees, 5):
         for col_idx, value in enumerate(emp_data, 1):
@@ -232,9 +263,18 @@ def create_team_allocation(ws, header_font, header_fill, border, center_align):
         adjusted_width = min(max_length + 2, 25)
         ws.column_dimensions[column_letter].width = adjusted_width
 
-def create_team_sheet(ws, team_name, header_font, header_fill, subheader_font, 
-                     subheader_fill, border, center_align):
-    """Create individual team task management sheet."""
+def create_team_sheet(ws, team, header_font, header_fill, subheader_font, 
+                     subheader_fill, border, center_align, config_manager):
+    """Create individual team task management sheet.
+    
+    Args:
+        ws: Worksheet object
+        team: Team configuration dictionary from config
+        header_font, header_fill, subheader_font, subheader_fill, border, center_align: Styling
+        config_manager: Configuration manager instance
+    """
+    
+    team_name = team["name"]
     
     # Title
     ws.merge_cells('A1:M2')
@@ -248,10 +288,8 @@ def create_team_sheet(ws, team_name, header_font, header_fill, subheader_font,
     ws['A4'] = f"Week of: {datetime.now().strftime('%Y-%m-%d')}"
     ws['A4'].font = Font(bold=True)
     
-    # Task Headers
-    headers = ["Task ID", "Task Name", "Assigned To", "Priority", "Status", 
-               "Start Date", "Due Date", "Progress %", "Hours Est.", "Hours Actual", 
-               "Dependencies", "Subtasks", "Notes"]
+    # Task Headers - use dynamic headers from configuration
+    headers = config_manager.get_task_headers()
     
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=6, column=col)
@@ -261,30 +299,32 @@ def create_team_sheet(ws, team_name, header_font, header_fill, subheader_font,
         cell.alignment = center_align
         cell.border = border
     
-    # Sample tasks for each team
-    if "Frontend" in team_name:
+    # Use sample tasks from configuration if available, otherwise create minimal samples
+    tasks = []
+    if "sample_tasks" in team and team["sample_tasks"]:
+        for task in team["sample_tasks"]:
+            task_row = [
+                task.get("task_id", ""),
+                task.get("task_name", ""),
+                task.get("assigned_to", ""),
+                task.get("priority", "Medium"),
+                task.get("status", "Not Started"),
+                task.get("start_date", ""),
+                task.get("due_date", ""),
+                task.get("progress", 0),
+                task.get("hours_est", 0),
+                task.get("hours_actual", 0),
+                task.get("dependencies", ""),
+                task.get("subtasks", ""),
+                task.get("notes", "")
+            ]
+            tasks.append(task_row)
+    else:
+        # Create minimal sample task for new teams
         tasks = [
-            ["FE001", "User Login Page", "John Doe", "High", "In Progress", "2024-01-01", "2024-01-15", 70, 20, 18, "", "Design, Code, Test", "Need API integration"],
-            ["FE002", "Dashboard Layout", "Jane Smith", "Medium", "Planning", "2024-01-10", "2024-01-25", 10, 30, 5, "FE001", "", "Waiting for requirements"],
-            ["FE003", "Mobile Responsive", "John Doe", "High", "Not Started", "2024-01-15", "2024-02-01", 0, 25, 0, "FE002", "", ""]
-        ]
-    elif "Backend" in team_name:
-        tasks = [
-            ["BE001", "User Authentication API", "Bob Johnson", "High", "Completed", "2023-12-15", "2024-01-05", 100, 15, 16, "", "Design, Code, Test", "Ready for frontend"],
-            ["BE002", "Database Schema", "Alice Wilson", "High", "In Progress", "2024-01-01", "2024-01-12", 80, 20, 18, "", "", "Almost done"],
-            ["BE003", "Payment Gateway", "Bob Johnson", "Medium", "Planning", "2024-01-15", "2024-02-15", 5, 40, 2, "BE002", "", "Waiting for approval"]
-        ]
-    elif "DevOps" in team_name:
-        tasks = [
-            ["DO001", "CI/CD Pipeline", "Mike Brown", "High", "In Progress", "2024-01-01", "2024-01-20", 60, 25, 20, "", "Setup, Test, Deploy", "Docker issues"],
-            ["DO002", "AWS Infrastructure", "Mike Brown", "Medium", "Planning", "2024-01-15", "2024-02-01", 20, 30, 8, "DO001", "", "Cost optimization needed"],
-            ["DO003", "Monitoring Setup", "Mike Brown", "Low", "Not Started", "2024-02-01", "2024-02-15", 0, 15, 0, "DO002", "", ""]
-        ]
-    else:  # QA Team
-        tasks = [
-            ["QA001", "Login Testing", "Sarah Davis", "High", "In Progress", "2024-01-05", "2024-01-18", 75, 12, 10, "FE001", "Manual, Auto", "Found 2 bugs"],
-            ["QA002", "API Testing", "Sarah Davis", "High", "Not Started", "2024-01-08", "2024-01-22", 0, 15, 0, "BE001", "", "Waiting for documentation"],
-            ["QA003", "Performance Testing", "Sarah Davis", "Medium", "Planning", "2024-01-20", "2024-02-05", 10, 20, 2, "", "", "Need test data"]
+            [f"{team_name[:3].upper()}001", f"Sample Task for {team_name}", "Team Member", "Medium", "Not Started", 
+             datetime.now().strftime("%Y-%m-%d"), (datetime.now() + timedelta(days=14)).strftime("%Y-%m-%d"), 
+             0, 10, 0, "", "", "Add your tasks here"]
         ]
     
     for row_idx, task_data in enumerate(tasks, 7):
@@ -346,7 +386,7 @@ def create_team_sheet(ws, team_name, header_font, header_fill, subheader_font,
         adjusted_width = min(max_length + 2, 20)
         ws.column_dimensions[column_letter].width = adjusted_width
 
-def create_weekly_planning(ws, header_font, header_fill, border, center_align):
+def create_weekly_planning(ws, header_font, header_fill, border, center_align, config_manager):
     """Create weekly planning sheet."""
     
     # Title
@@ -374,8 +414,8 @@ def create_weekly_planning(ws, header_font, header_fill, border, center_align):
         cell.alignment = center_align
         cell.border = border
     
-    # Team rows
-    teams = ["Frontend Team", "Backend Team", "DevOps Team", "QA Team"]
+    # Team rows from configuration
+    teams = config_manager.get_team_names()
     
     for row_idx, team in enumerate(teams, 7):
         cell = ws.cell(row=row_idx, column=1)
@@ -407,7 +447,7 @@ def create_weekly_planning(ws, header_font, header_fill, border, center_align):
         adjusted_width = max(max_length + 2, 15)
         ws.column_dimensions[column_letter].width = adjusted_width
 
-def create_templates_sheet(ws, header_font, header_fill, border, center_align):
+def create_templates_sheet(ws, header_font, header_fill, border, center_align, config_manager):
     """Create templates and instructions sheet."""
     
     # Title
@@ -485,15 +525,26 @@ def create_templates_sheet(ws, header_font, header_fill, border, center_align):
     # Auto-adjust column width
     ws.column_dimensions['A'].width = 60
 
-def main():
-    """Main function to create and save the Excel workbook."""
+def main(config_path="config.json"):
+    """Main function to create and save the Excel workbook.
+    
+    Args:
+        config_path: Path to configuration file
+    """
     print("Creating Team Task Planner Excel workbook...")
     
-    # Create the workbook
-    wb = create_team_task_planner()
+    # Initialize configuration manager
+    config_manager = ConfigManager(config_path)
     
-    # Save the workbook
-    filename = "Team_Task_Planner.xlsx"
+    print(f"Organization: {config_manager.get_organization_name()}")
+    print(f"Teams: {', '.join(config_manager.get_team_names())}")
+    
+    # Create the workbook
+    wb = create_team_task_planner(config_manager)
+    
+    # Generate filename based on organization
+    org_name = config_manager.get_organization_name().replace(' ', '_')
+    filename = f"{org_name}_Task_Planner.xlsx"
     wb.save(filename)
     
     print(f"Excel workbook '{filename}' created successfully!")
@@ -504,4 +555,6 @@ def main():
     return filename
 
 if __name__ == "__main__":
-    main()
+    import sys
+    config_path = sys.argv[1] if len(sys.argv) > 1 else "config.json"
+    main(config_path)

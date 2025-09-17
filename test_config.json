@@ -1,0 +1,88 @@
+{
+  "organization": {
+    "name": "Acme Corporation",
+    "project_name": "Team Task Planner"
+  },
+  "teams": [
+    {
+      "name": "Mobile Development",
+      "description": "iOS and Android app development",
+      "sample_tasks": [
+        {
+          "task_id": "MOB001",
+          "task_name": "iOS Login Screen",
+          "assigned_to": "Alice Johnson",
+          "priority": "High",
+          "status": "In Progress",
+          "start_date": "2024-01-01",
+          "due_date": "2024-01-15",
+          "progress": 60,
+          "hours_est": 25,
+          "hours_actual": 18,
+          "dependencies": "",
+          "subtasks": "UI Design, Implementation, Testing",
+          "notes": "Need to integrate with auth API"
+        }
+      ]
+    },
+    {
+      "name": "Data Science",
+      "description": "Analytics and machine learning",
+      "sample_tasks": [
+        {
+          "task_id": "DS001",
+          "task_name": "Customer Behavior Analysis",
+          "assigned_to": "Bob Smith",
+          "priority": "Medium",
+          "status": "Planning",
+          "start_date": "2024-01-10",
+          "due_date": "2024-02-01",
+          "progress": 15,
+          "hours_est": 40,
+          "hours_actual": 6,
+          "dependencies": "",
+          "subtasks": "Data Collection, Analysis, Report",
+          "notes": "Waiting for data access"
+        }
+      ]
+    },
+    {
+      "name": "UI/UX Design",
+      "description": "UI/UX Design tasks and management",
+      "sample_tasks": []
+    },
+    {
+      "name": "UI Design",
+      "description": "UI Design tasks and management",
+      "sample_tasks": []
+    }
+  ],
+  "task_headers": [
+    "Task ID",
+    "Task Name",
+    "Assigned To",
+    "Priority",
+    "Status",
+    "Start Date",
+    "Due Date",
+    "Progress %",
+    "Hours Est.",
+    "Hours Actual",
+    "Dependencies",
+    "Subtasks",
+    "Notes"
+  ],
+  "status_options": [
+    "Not Started",
+    "Planning",
+    "In Progress",
+    "Completed",
+    "On Hold"
+  ],
+  "priority_options": [
+    "Low",
+    "Medium",
+    "High",
+    "Critical"
+  ]
+}
